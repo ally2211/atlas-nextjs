@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL") // Ensure DATABASE_URL is in your .env.local
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id       String @id @default(uuid())
+    name     String
+    email    String @unique
+    password String
+}
+
+model Topic {
+    id    String @id @default(uuid())
+    title String
+}
+
+model Question {
+    id        String  @id @default(uuid())
+    title     String
+    topic_id  String
+    votes     Int
+    answer_id String? // Optional
+}
+
+model Answer {
+    id          String @id @default(uuid())
+    answer      String
+    question_id String
+}
