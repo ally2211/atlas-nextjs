@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { users, topics, questions } from "../../lib/placeholder-data";
 import { revalidatePath } from "next/cache";
@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx:Prisma.TransactionClient) => {
       // Optional: Drop all data first
       await tx.answer.deleteMany();
       await tx.question.deleteMany();
@@ -51,12 +51,14 @@ export async function GET() {
 
     revalidatePath("/", "layout");
     return Response.json({ message: "Database seeded successfully" });
-  } catch (error) {
-    console.error(error?.stack || error);  // Logs full error stack or message
-    return Response.json(
-      { error: error?.message || error?.toString() || "Unknown error" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+    console.error(error.stack);
+    return Response.json({ error: error.message }, { status: 500 });
+  } else {
+    console.error(error);
+    return Response.json({ error: String(error) }, { status: 500 });
+  }
   } finally {
     await prisma.$disconnect();
   }
