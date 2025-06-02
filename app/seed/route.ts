@@ -1,65 +1,148 @@
-import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { db } from "@vercel/postgres";
 import { users, topics, questions } from "../../lib/placeholder-data";
 import { revalidatePath } from "next/cache";
 
-const prisma = new PrismaClient();
+const client = await db.connect();
+
+async function seedUsers() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL
+    );
+  `;
+
+  await client.sql`DELETE FROM users`;
+
+  const insertedUsers = await Promise.all(
+    users.map(async (user) => {
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      return client.sql`
+        INSERT INTO users (id, name, email, password)
+        VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
+        ON CONFLICT (id) DO NOTHING;
+      `;
+    })
+  );
+
+  return insertedUsers;
+}
+
+async function seedTopics() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS topics (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      title VARCHAR(255) NOT NULL
+    );
+  `;
+
+  await client.sql`DELETE FROM topics`;
+
+  const insertedTopics = await Promise.all(
+    topics.map(
+      (topic) => client.sql`
+        INSERT INTO topics (id, title)
+        VALUES (${topic.id}, ${topic.title})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedTopics;
+}
+
+async function seedQuestions() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS questions (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      topic_id UUID NOT NULL,
+      votes INT NOT NULL,
+      answer_id UUID
+    );
+  `;
+
+  await client.sql`DELETE FROM questions`;
+
+  const insertedQuestions = await Promise.all(
+    questions.map(
+      (question) => client.sql`
+        INSERT INTO questions (id, title, topic_id, votes)
+        VALUES (${question.id}, ${question.title}, ${question.topic}, ${question.votes})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedQuestions;
+}
+
+async function seedAnswers() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS answers (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      answer VARCHAR(255) NOT NULL,
+      question_id UUID NOT NULL
+    );
+  `;
+
+  await client.sql`DELETE FROM answers`;
+
+  const answers = [
+    {
+      id: "0b93d8dc-6e43-49e3-b59f-b67531247612",
+      answer:
+        "It's a new feature in TypeScript that makes it easier to write type-safe code.",
+      question_id: "0b93d8dc-6e43-49e3-b59f-b67531247612",
+    },
+  ];
+
+  const insertedAnswers = await Promise.all(
+    answers.map(
+      (answer) => client.sql`
+        INSERT INTO answers (id, answer, question_id)
+        VALUES (${answer.id}, ${answer.answer}, ${answer.question_id})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedAnswers;
+}
+
+async function clearData() {
+  await client.sql`DROP TABLE IF EXISTS questions`;
+  await client.sql`DROP TABLE IF EXISTS topics`;
+  await client.sql`DROP TABLE IF EXISTS users`;
+}
 
 export async function GET() {
   try {
-    await prisma.$transaction(async (tx:Prisma.TransactionClient) => {
-      // Optional: Drop all data first
-      await tx.answer.deleteMany();
-      await tx.question.deleteMany();
-      await tx.topic.deleteMany();
-      await tx.user.deleteMany();
-
-      // Insert users
-      for (const user of users) {
-        const hashedPassword = await bcrypt.hash(user.password, 10);
-        await tx.user.create({
-          data: { id: user.id, name: user.name, email: user.email, password: hashedPassword },
-        });
-      }
-
-      // Insert topics
-      for (const topic of topics) {
-        await tx.topic.create({ data: { id: topic.id, title: topic.title } });
-      }
-
-      // Insert questions
-      for (const question of questions) {
-        await tx.question.create({
-          data: {
-            id: question.id,
-            title: question.title,
-            topic_id: question.topic,
-            votes: question.votes,
-          },
-        });
-      }
-
-      // Insert sample answer
-      await tx.answer.create({
-        data: {
-          id: "0b93d8dc-6e43-49e3-b59f-b67531247612",
-          answer: "It's a new feature in TypeScript that makes it easier to write type-safe code.",
-          question_id: "0b93d8dc-6e43-49e3-b59f-b67531247612",
-        },
-      });
-    });
+    await client.sql`BEGIN`;
+    await clearData();
+    await seedUsers();
+    await seedTopics();
+    await seedQuestions();
+    await seedAnswers();
+    await client.sql`COMMIT`;
 
     revalidatePath("/", "layout");
+
     return Response.json({ message: "Database seeded successfully" });
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-    console.error(error.stack);
-    return Response.json({ error: error.message }, { status: 500 });
-  } else {
-    console.error(error);
-    return Response.json({ error: String(error) }, { status: 500 });
-  }
-  } finally {
-    await prisma.$disconnect();
+  } catch (error) {
+    await client.sql`ROLLBACK`;
+    console.log(error);
+    return Response.json({ error }, { status: 500 });
   }
 }
