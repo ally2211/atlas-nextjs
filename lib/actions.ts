@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { incrementVotes, insertQuestion, insertTopic } from "./data";
+import { incrementVotes, insertQuestion, insertTopic, insertAnswer, updateAcceptedAnswer} from "./data";
 import { redirect } from "next/navigation";
+import { sql } from "@vercel/postgres";
 
 export async function addTopic(data: FormData) {
   let topic;
@@ -40,5 +41,35 @@ export async function addVote(data: FormData) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to add vote.");
+  }
+}
+
+export async function submitAnswer(answer: FormData) {
+  try {
+    await insertAnswer({
+      text: answer.get("text") as string,
+      question_id: answer.get("question_id") as string,
+      is_accepted: false,
+    });
+
+    revalidatePath(`/ui/questions/${answer.get("question_id")}`, "page");
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to submit answer.");
+  }
+}
+
+export async function markAnswerAsAccepted(formData: FormData) {
+  const answer_id = formData.get("answer_id") as string;
+  const question_id = formData.get("question_id") as string;
+
+  if (!answer_id || !question_id) return;
+
+  try {
+    await updateAcceptedAnswer({ answer_id, question_id });
+    revalidatePath(`/ui/questions/${question_id}`, "page");
+  } catch (error) {
+    console.error("Action Error:", error);
+    throw new Error("Failed to mark accepted answer.");
   }
 }

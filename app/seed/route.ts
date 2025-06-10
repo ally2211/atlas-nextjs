@@ -93,8 +93,9 @@ async function seedAnswers() {
     CREATE TABLE IF NOT EXISTS answers (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       answer VARCHAR(255) NOT NULL,
-      question_id UUID NOT NULL
-    );
+      question_id UUID NOT NULL,
+      is_accepted BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   `;
 
   await client.sql`DELETE FROM answers`;

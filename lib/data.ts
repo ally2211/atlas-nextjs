@@ -42,6 +42,14 @@ export async function fetchQuestions(id: string) {
   }
 }
 
+export async function fetchQuestion(id: string) {
+  const data = await sql`
+    SELECT * FROM questions WHERE id = ${id} LIMIT 1
+  `;
+  return data.rows[0]; // Make sure this returns a single object
+}
+
+
 export async function insertQuestion(
   question: Pick<Question, "title" | "topic_id" | "votes">
 ) {
@@ -52,6 +60,35 @@ export async function insertQuestion(
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to add question.");
+  }
+}
+
+
+
+export async function updateAcceptedAnswer({
+  answer_id,
+  question_id,
+}: {
+  answer_id: string;
+  question_id: string;
+}) {
+  try {
+    // Unmark all answers for this question
+    await sql`
+      UPDATE answers
+      SET is_accepted = FALSE
+      WHERE question_id = ${question_id}
+    `;
+
+    // Mark the selected answer as accepted
+    await sql`
+      UPDATE answers
+      SET is_accepted = TRUE
+      WHERE id = ${answer_id}
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to update accepted answer.");
   }
 }
 
@@ -75,5 +112,56 @@ export async function incrementVotes(id: string) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to increment votes.");
+  }
+}
+
+export async function fetchAnswers(questionId: string) {
+  try {
+    const data = await sql`
+      SELECT * FROM answers
+      WHERE question_id = ${questionId}
+      ORDER BY is_accepted DESC, created_at ASC
+    `;
+    return data.rows;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch answers.");
+  }
+}
+
+export async function insertAnswer({
+  text,
+  question_id,
+  is_accepted = false,
+}: {
+  text: string;
+  question_id: string;
+  is_accepted?: boolean;
+}) {
+  await sql`
+    INSERT INTO answers (text, question_id, is_accepted)
+    VALUES (${text}, ${question_id}, ${is_accepted})
+  `;
+}
+
+
+export async function markAnswerAsAccepted(answerId: string, questionId: string) {
+  try {
+    // First unset all
+    await sql`
+      UPDATE answers
+      SET is_accepted = FALSE
+      WHERE question_id = ${questionId}
+    `;
+
+    // Then mark selected as accepted
+    await sql`
+      UPDATE answers
+      SET is_accepted = TRUE
+      WHERE id = ${answerId}
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to mark answer as accepted.");
   }
 }
