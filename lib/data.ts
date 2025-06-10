@@ -1,3 +1,5 @@
+"use server";
+
 import { sql } from "@vercel/postgres";
 import { Question, Topic, User } from "./definitions";
 
@@ -63,35 +65,6 @@ export async function insertQuestion(
   }
 }
 
-
-
-export async function updateAcceptedAnswer({
-  answer_id,
-  question_id,
-}: {
-  answer_id: string;
-  question_id: string;
-}) {
-  try {
-    // Unmark all answers for this question
-    await sql`
-      UPDATE answers
-      SET is_accepted = FALSE
-      WHERE question_id = ${question_id}
-    `;
-
-    // Mark the selected answer as accepted
-    await sql`
-      UPDATE answers
-      SET is_accepted = TRUE
-      WHERE id = ${answer_id}
-    `;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to update accepted answer.");
-  }
-}
-
 export async function insertTopic(topic: Pick<Topic, "title">) {
   try {
     const data =
@@ -144,24 +117,40 @@ export async function insertAnswer({
   `;
 }
 
-
-export async function markAnswerAsAccepted(answerId: string, questionId: string) {
+export async function updateAcceptedAnswer({
+  answer_id,
+  question_id,
+}: {
+  answer_id: string;
+  question_id: string;
+}) {
   try {
-    // First unset all
+    // Unmark all answers for this question
     await sql`
       UPDATE answers
       SET is_accepted = FALSE
-      WHERE question_id = ${questionId}
+      WHERE question_id = ${question_id}
     `;
 
-    // Then mark selected as accepted
+    // Mark the selected answer as accepted
     await sql`
       UPDATE answers
       SET is_accepted = TRUE
-      WHERE id = ${answerId}
+      WHERE id = ${answer_id}
     `;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to mark answer as accepted.");
+    throw new Error("Failed to update accepted answer.");
   }
+}
+
+export async function markAnswerAsAccepted(formData: FormData) {
+  const answerId = formData.get("answer_id") as string;
+  const questionId = formData.get("question_id") as string;
+
+  if (!answerId || !questionId) {
+    throw new Error("Missing answer_id or question_id");
+  }
+
+  await updateAcceptedAnswer({ answer_id: answerId, question_id: questionId });
 }

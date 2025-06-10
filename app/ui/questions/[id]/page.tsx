@@ -3,6 +3,8 @@ import { AnswerForm } from "@/components/AnswerForm";
 
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
+export const dynamicParams = true;
+
 export default async function QuestionPage({
   params,
 }: {
