@@ -66,7 +66,7 @@ export async function markAnswerAsAccepted(formData: FormData) {
   if (!answer_id || !question_id) return;
 
   try {
-    await updateAcceptedAnswer({ answer_id, question_id });
+    
     revalidatePath(`/ui/questions/${question_id}`, "page");
   } catch (error) {
     console.error("Action Error:", error);

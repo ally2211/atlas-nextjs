@@ -117,26 +117,20 @@ export async function insertAnswer({
   `;
 }
 
-export async function updateAcceptedAnswer({
-  answer_id,
-  question_id,
-}: {
-  answer_id: string;
-  question_id: string;
-}) {
+export async function updateAcceptedAnswer(answerId: string, questionId: string) {
   try {
     // Unmark all answers for this question
     await sql`
       UPDATE answers
       SET is_accepted = FALSE
-      WHERE question_id = ${question_id}
+      WHERE question_id = ${questionId}
     `;
 
     // Mark the selected answer as accepted
     await sql`
       UPDATE answers
       SET is_accepted = TRUE
-      WHERE id = ${answer_id}
+      WHERE id = ${answerId}
     `;
   } catch (error) {
     console.error("Database Error:", error);
@@ -152,5 +146,5 @@ export async function markAnswerAsAccepted(formData: FormData) {
     throw new Error("Missing answer_id or question_id");
   }
 
-  await updateAcceptedAnswer({ answer_id: answerId, question_id: questionId });
+  await updateAcceptedAnswer(answerId, questionId);
 }
