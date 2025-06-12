@@ -1,20 +1,25 @@
-import { fetchQuestions } from "@/lib/data";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// app/api/topics/[id]/questions/route.ts
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+import { fetchQuestions } from "@/lib/data";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
   try {
-    const topicId = params.id;
+    // ✅ Extract topic ID from the URL
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const topicId = segments[segments.length - 2]; // e.g., "abc123"
+
+    if (!topicId) {
+      return NextResponse.json({ error: "Missing topic ID" }, { status: 400 });
+    }
 
     const questions = await fetchQuestions(topicId);
 
     const simplified = questions.map((q) => ({
       id: q.id,
       title: q.title,
-      topic_id: q.topic_id, // or topicId if your DB uses camelCase
+      topic_id: q.topic_id,
       votes: q.votes,
     }));
 

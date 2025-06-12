@@ -1,20 +1,25 @@
-import { fetchAnswers } from "@/lib/data";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// app/api/questions/[id]/answers/route.ts
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+import { fetchAnswers } from "@/lib/data";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
   try {
-    const questionId = params.id;
+    // ✅ Extract the ID from the pathname ("/api/questions/:id/answers")
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const questionId = segments[segments.length - 2]; // e.g., "1234"
+
+    if (!questionId) {
+      return NextResponse.json({ error: "Missing question ID" }, { status: 400 });
+    }
 
     const answers = await fetchAnswers(questionId);
 
     const simplified = answers.map((a) => ({
       id: a.id,
       answer: a.answer,
-      question_id: a.question_id, // or questionId if camelCase
+      question_id: a.question_id,
     }));
 
     return NextResponse.json(simplified);
