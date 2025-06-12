@@ -1,5 +1,3 @@
-// app/api/topics/route.ts
-
 import { fetchTopics } from "@/lib/data";
 import { NextResponse } from "next/server";
 

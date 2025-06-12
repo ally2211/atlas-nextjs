@@ -1,22 +1,20 @@
-// app/api/topics/[id]/questions/route.ts
-
 import { fetchQuestions } from "@/lib/data";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const topicId = context.params.id;
+    const topicId = params.id;
 
     const questions = await fetchQuestions(topicId);
 
     const simplified = questions.map((q) => ({
       id: q.id,
       title: q.title,
-      topic_id: q.topic_id, // or q.topicId if camelCase
+      topic_id: q.topic_id, // or topicId if your DB uses camelCase
       votes: q.votes,
     }));
 
