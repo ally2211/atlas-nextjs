@@ -1,4 +1,5 @@
 import SideNav from "@/components/Sidenav";
+import LoggedInUser from "@/components/LoggedInUser";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
