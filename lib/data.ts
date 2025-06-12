@@ -2,6 +2,7 @@
 
 import { sql } from "@vercel/postgres";
 import { Question, Topic, User } from "./definitions";
+import { revalidatePath } from "next/cache";
 
 export async function fetchUser(email: string): Promise<User | undefined> {
   try {
@@ -112,7 +113,7 @@ export async function insertAnswer({
   is_accepted?: boolean;
 }) {
   await sql`
-    INSERT INTO answers (text, question_id, is_accepted)
+    INSERT INTO answers (answer, question_id, is_accepted)
     VALUES (${text}, ${question_id}, ${is_accepted})
   `;
 }
@@ -147,4 +148,7 @@ export async function markAnswerAsAccepted(formData: FormData) {
   }
 
   await updateAcceptedAnswer(answerId, questionId);
+  
+  // 🔁 This makes the page re-render with fresh data
+  revalidatePath(`/ui/questions/${questionId}`, "page");
 }

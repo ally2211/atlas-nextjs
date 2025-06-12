@@ -5,12 +5,10 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 export const dynamicParams = true;
 
-export default async function QuestionPage({
-  params,
-}: {
-  params: { id: string };
+export default async function QuestionPage(props: {
+  params: Promise<{ id: string }>;
 }) {
-  const questionId = params.id;
+  const { id: questionId } = await props.params;
   const question = await fetchQuestion(questionId);
   const answers = await fetchAnswers(questionId);
 
@@ -27,34 +25,44 @@ export default async function QuestionPage({
 
       <AnswerForm questionId={questionId} />
 
-      <div className="mt-8">
-        {accepted && (
-          <div className="border p-4 rounded bg-green-100 mb-4">
-            <p>{accepted.text}</p>
-            <div className="text-green-600 text-sm mt-2 flex items-center">
-              <CheckCircleIcon className="h-4 w-4 mr-1" />
-              Accepted Answer
-            </div>
-          </div>
-        )}
+      <table className="w-full border mt-8 text-sm">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2 text-left">Answer</th>
+            <th className="p-2 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {answers.map((answer) => (
+          <tr key={answer.id} className="border-b">
+            <td className="p-2">
+              <div className="flex items-center justify-between gap-4">
+                <p>{answer.answer}</p>
 
-        {others.map((answer) => (
-          <div key={answer.id} className="border p-4 rounded mb-4 bg-white">
-            <p>{answer.text}</p>
-            <form action={markAnswerAsAccepted} className="mt-2">
-              <input type="hidden" name="answer_id" value={answer.id} />
-              <input type="hidden" name="question_id" value={questionId} />
-              <button
-                type="submit"
-                className="text-blue-600 text-sm flex items-center hover:underline"
-              >
-                <CheckCircleIcon className="h-4 w-4 mr-1" />
-                Mark as Accepted
-              </button>
-            </form>
-          </div>
-        ))}
-      </div>
+                {answer.is_accepted ? (
+                  <div className="text-green-600 flex items-center text-sm">
+                    <CheckCircleIcon className="h-4 w-4 mr-1" />
+                    Accepted
+                  </div>
+                ) : (
+                  <form action={markAnswerAsAccepted}>
+                    <input type="hidden" name="answer_id" value={answer.id} />
+                    <input type="hidden" name="question_id" value={questionId} />
+                    <button
+                      type="submit"
+                      className="text-blue-600 hover:underline flex items-center text-sm"
+                    >
+                      <CheckCircleIcon className="h-4 w-4 mr-1" />
+                      Mark as Accepted
+                    </button>
+                  </form>
+                )}
+              </div>
+            </td>
+          </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
