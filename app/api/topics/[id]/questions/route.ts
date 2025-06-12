@@ -2,20 +2,21 @@
 
 import { fetchQuestions } from "@/lib/data";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const topicId = params.id;
+    const topicId = context.params.id;
 
     const questions = await fetchQuestions(topicId);
 
     const simplified = questions.map((q) => ({
       id: q.id,
       title: q.title,
-      topic_id: q.topic_id,  // Adjust key to match your database field name
+      topic_id: q.topic_id, // or q.topicId if camelCase
       votes: q.votes,
     }));
 

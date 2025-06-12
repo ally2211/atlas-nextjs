@@ -13,10 +13,10 @@ export async function GET() {
     }));
 
     return NextResponse.json(simplified);
-  } catch (err) {
-    console.error("Error in /api/topics:", err);
+  } catch (error) {
+    console.error("Error in /api/topics:", error);
     return NextResponse.json(
-      { error: "Unable to fetch topics" },
+      { error: "Failed to fetch topics" },
       { status: 500 }
     );
   }

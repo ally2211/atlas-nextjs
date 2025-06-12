@@ -1,9 +1,11 @@
+// app/api/questions/[id]/answers/route.ts
+
 import { fetchAnswers } from "@/lib/data";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: { id: string } }
 ) {
   try {
@@ -13,8 +15,8 @@ export async function GET(
 
     const simplified = answers.map((a) => ({
       id: a.id,
-      answer: a.answer,
-      question_id: a.question_id,
+      answer: a.answer,           // match your actual DB field
+      question_id: a.question_id, // or a.questionId if camelCase
     }));
 
     return NextResponse.json(simplified);
