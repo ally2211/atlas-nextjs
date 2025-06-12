@@ -1,20 +1,19 @@
-// app/api/questions/[id]/answers/route.ts
-
 import { fetchAnswers } from "@/lib/data";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const questionId = params.id;
+    const questionId = context.params.id;
 
     const answers = await fetchAnswers(questionId);
 
     const simplified = answers.map((a) => ({
       id: a.id,
-      answer: a.answer,  // match your DB field name
+      answer: a.answer,
       question_id: a.question_id,
     }));
 
