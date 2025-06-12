@@ -26,12 +26,6 @@ export default async function QuestionPage(props: {
       <AnswerForm questionId={questionId} />
 
       <table className="w-full border mt-8 text-sm">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2 text-left">Answer</th>
-            <th className="p-2 text-left">Actions</th>
-          </tr>
-        </thead>
         <tbody>
           {answers.map((answer) => (
           <tr key={answer.id} className="border-b">
@@ -42,7 +36,7 @@ export default async function QuestionPage(props: {
                 {answer.is_accepted ? (
                   <div className="text-green-600 flex items-center text-sm">
                     <CheckCircleIcon className="h-4 w-4 mr-1" />
-                    Accepted
+                  
                   </div>
                 ) : (
                   <form action={markAnswerAsAccepted}>
@@ -53,7 +47,7 @@ export default async function QuestionPage(props: {
                       className="text-blue-600 hover:underline flex items-center text-sm"
                     >
                       <CheckCircleIcon className="h-4 w-4 mr-1" />
-                      Mark as Accepted
+                     
                     </button>
                   </form>
                 )}
