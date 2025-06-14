@@ -1,4 +1,3 @@
-// src/components/LoggedInUser.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -6,22 +5,25 @@ import Image from "next/image";
 
 export default function LoggedInUser() {
   const { data: session } = useSession();
+  const user = session?.user;
 
-  if (!session?.user) return null;
-
-  const name = session.user.name || "Anonymous";
-  const avatar = session.user.image || "/profile.png"; // Add this image to your public folder
+  const name = user?.name || "Test User";
+  const avatar = user?.image;
 
   return (
     <div className="flex items-center gap-3 p-2">
-      <Image
-        src={avatar}
-        alt="User avatar"
-        width={32}
-        height={32}
-        className="rounded-full"
-      />
-      <span className="text-sm font-medium">{name}</span>
+      {avatar ? (
+        <Image
+          src={avatar}
+          alt="User avatar"
+          width={32}
+          height={32}
+          className="rounded-full"
+        />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-gray-400 flex-shrink-0" />
+      )}
+      <span className="text-sm font-medium text-gray-800">{name}</span>
     </div>
   );
 }
