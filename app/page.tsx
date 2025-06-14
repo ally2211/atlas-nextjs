@@ -2,6 +2,7 @@ import Image from "next/image";
 import placeholder from "@/assets/placeholder.svg";
 import Link from "next/link";
 import { signIn } from "@/auth";
+import GitHubLoginButton from "@/components/GitHubLoginButton";
 
 export default function Page() {
   return (

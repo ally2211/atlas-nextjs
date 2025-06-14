@@ -1,29 +1,27 @@
+// src/components/LoggedInUser.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 
 export default function LoggedInUser() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
-  if (status === "loading") return null;
-  if (!session || !session.user) return null;
+  if (!session?.user) return null;
 
-  const user = session.user;
-  const avatarUrl = user.image || "./images/logged-in-user.png"; // fallback image
+  const name = session.user.name || "Anonymous";
+  const avatar = session.user.image || "/profile.png"; // Add this image to your public folder
 
   return (
-    <div className="flex items-center gap-3 p-4">
+    <div className="flex items-center gap-3 p-2">
       <Image
-        src={avatarUrl}
-        alt="User Avatar"
-        width={40}
-        height={40}
-        className="rounded-full object-cover"
+        src={avatar}
+        alt="User avatar"
+        width={32}
+        height={32}
+        className="rounded-full"
       />
-      <span className="text-sm font-medium text-gray-700">
-        {user.name || "User"}
-      </span>
+      <span className="text-sm font-medium">{name}</span>
     </div>
   );
 }
